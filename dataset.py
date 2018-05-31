@@ -2,7 +2,8 @@ import os
 import string
 import numpy as np
 
-from skimage import io
+#from skimage import io
+from PIL import Image
 from torch.utils.data import Dataset
 
 class CaptchaDataset(Dataset):
@@ -30,13 +31,17 @@ class CaptchaDataset(Dataset):
     def encode_label(self, label):
         return np.array([self.alphabet_dict[c] for c in label], dtype=np.long)
 
+    def decode_label(self, label):
+        return [self.alphabet[int(c)] for c in label]
+
     def __len__(self):
         return len(self.image_names)
 
     def __getitem__(self, idx):
         img_name = os.path.join(self.root_dir,
                                 self.image_names[idx])
-        image = io.imread(img_name)
+        #image = io.imread(img_name)
+        image = Image.open(img_name)
         label = self.labels[idx]
 
         if self.transform:
