@@ -59,19 +59,19 @@ class DeepCNN(nn.Module):
         self.conv0 = nn.Conv2d(3, 32, (3, 3), padding=1)
         self.conv1 = nn.Conv2d(32, 32, (3, 3), padding=1)
         self.conv2 = nn.Conv2d(32, 32, (3, 3), padding=1)
-        self.conv3 = nn.Conv2d(32, 32, (3, 3), padding=1)
-        self.conv4 = nn.Conv2d(32, 32, (3, 3), padding=1)
-        self.conv5 = nn.Conv2d(32, 32, (3, 3), padding=1)
+        self.conv3 = nn.Conv2d(32, 64, (3, 3), padding=1)
+        self.conv4 = nn.Conv2d(64, 64, (3, 3), padding=1)
+        self.conv5 = nn.Conv2d(64, 64, (3, 3), padding=1)
 
         self.bn0 = nn.BatchNorm2d(32)
         self.bn1 = nn.BatchNorm2d(32)
         self.bn2 = nn.BatchNorm2d(32)
-        self.bn3 = nn.BatchNorm2d(32)
-        self.bn4 = nn.BatchNorm2d(32)
-        self.bn5 = nn.BatchNorm2d(32)
+        self.bn3 = nn.BatchNorm2d(64)
+        self.bn4 = nn.BatchNorm2d(64)
+        self.bn5 = nn.BatchNorm2d(64)
 
         #self.lin0   = nn.Linear(2496, 128)
-        self.lin0   = nn.Linear(1280, length*n_classes)
+        self.lin0   = nn.Linear(1280*2, length*n_classes)
         #self.lin1   = nn.Linear(128, length*n_classes)
 
     def forward(self, x):
@@ -101,8 +101,7 @@ class DeepCNN(nn.Module):
         # flatten non-batch dimensions
         o = o.view(o.size(0), -1)
 
-        #o = F.dropout(o, training=self.training, p=0.5)
-        #o = F.relu(self.lin0(o) )
+        o = F.dropout(o, p=0.5)
         o = self.lin0(o)
 
         o = o.view(o.size(0), self.n_classes, self.length)

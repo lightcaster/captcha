@@ -24,6 +24,7 @@ def predict(model, device, dataset):
     sample_acc_rate = 0
 
     with torch.no_grad():
+        model.eval()
         for step, (images, labels) in enumerate(dataset):
 
             inputs, targets = images.to(device), labels.to(device)

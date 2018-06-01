@@ -94,10 +94,9 @@ if __name__ == '__main__':
     device = torch.device("cpu" if args.no_cuda else "cuda")
 
     train_transform = transforms.Compose([
-            #transforms.Resize((165, 75)),
             transforms.RandomGrayscale(0.3), 
-            transforms.ColorJitter(0.5, 0.5, 0.5),
-            transforms.RandomAffine((-2,2), (0.1, 0.1), (0.9, 1.) ),
+            transforms.ColorJitter(0.1, 0.1, 0.1),
+            #transforms.RandomAffine((-2,2), (0.1, 0.1), (0.9, 1.) ),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                     std=[0.229, 0.224, 0.225])
@@ -159,6 +158,6 @@ if __name__ == '__main__':
                 sample_rate.float() / len(test_dataset),
                 ))
 
-    print('Saving model')
-    torch.save(model.state_dict(), 'model.pth')
+            print('Saving model')
+            torch.save(model.state_dict(), 'model.pth')
 
