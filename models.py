@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+import torchvision
 
 class SimpleCNN(nn.Module):
 
@@ -20,7 +21,6 @@ class SimpleCNN(nn.Module):
         self.bn1 = nn.BatchNorm2d(32)
         self.bn2 = nn.BatchNorm2d(32)
 
-        #self.lin0   = nn.Linear(10368, 128)
         self.lin0   = nn.Linear(23040, 64)
         self.lin1   = nn.Linear(64, length*n_classes)
 
@@ -41,7 +41,7 @@ class SimpleCNN(nn.Module):
         o = o.view(o.size(0), -1)
 
         o = F.relu(self.lin0(o))
-        o = F.dropout(o, training=self.training)
+        #o = F.dropout(o, training=self.training)
         o = self.lin1(o) 
 
         o = o.view(o.size(0), self.n_classes, self.length)
@@ -61,17 +61,18 @@ class DeepCNN(nn.Module):
         self.conv2 = nn.Conv2d(32, 32, (3, 3), padding=1)
         self.conv3 = nn.Conv2d(32, 32, (3, 3), padding=1)
         self.conv4 = nn.Conv2d(32, 32, (3, 3), padding=1)
-        self.conv5 = nn.Conv2d(32, 64, (3, 3), padding=1)
+        self.conv5 = nn.Conv2d(32, 32, (3, 3), padding=1)
 
         self.bn0 = nn.BatchNorm2d(32)
         self.bn1 = nn.BatchNorm2d(32)
         self.bn2 = nn.BatchNorm2d(32)
         self.bn3 = nn.BatchNorm2d(32)
         self.bn4 = nn.BatchNorm2d(32)
-        self.bn5 = nn.BatchNorm2d(64)
+        self.bn5 = nn.BatchNorm2d(32)
 
-        #self.lin0   = nn.Linear(10368, 128)
-        self.lin0   = nn.Linear(1280*2, length*n_classes)
+        #self.lin0   = nn.Linear(2496, 128)
+        self.lin0   = nn.Linear(1280, length*n_classes)
+        #self.lin1   = nn.Linear(128, length*n_classes)
 
     def forward(self, x):
         o = F.relu(self.conv0(x))
@@ -100,8 +101,9 @@ class DeepCNN(nn.Module):
         # flatten non-batch dimensions
         o = o.view(o.size(0), -1)
 
-        o = F.dropout(o, training=self.training, p=0.5)
-        o = self.lin0(o) 
+        #o = F.dropout(o, training=self.training, p=0.5)
+        #o = F.relu(self.lin0(o) )
+        o = self.lin0(o)
 
         o = o.view(o.size(0), self.n_classes, self.length)
 

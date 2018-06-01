@@ -6,12 +6,14 @@ import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
 
+import models
+import torchvision
+
 from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from dataset import CaptchaDataset
-from models import SimpleCNN, DeepCNN
-
+import matplotlib.pyplot as plt
 
 def train(model, device, train_loader, optimizer):
     model.train()
@@ -20,6 +22,9 @@ def train(model, device, train_loader, optimizer):
     total_loss = 0
 
     for step, (images, labels) in enumerate(train_loader):
+
+        #plt.imshow(images[0].cpu().numpy().transpose(1,2,0))
+        #plt.show()
 
         inputs, targets = images.to(device), labels.to(device)
 
@@ -50,6 +55,7 @@ def test(model, device, test_loader):
     with torch.no_grad():
         for step, (images, labels) in enumerate(test_loader):
 
+
             inputs, targets = images.to(device), labels.to(device)
 
             logits = model(inputs)
@@ -76,6 +82,8 @@ if __name__ == '__main__':
             help='data root directory')
     parser.add_argument('--epochs', '-e', type=int, default=30, 
             help='number of epochs to train')
+    parser.add_argument('--eps', type=float, default=1e-7, 
+            help='adadelta regularization')
     parser.add_argument('--batch-size', '-b', type=int, default=16,
                         help='input batch size')
     parser.add_argument('--no-cuda', action='store_true', 
@@ -88,18 +96,18 @@ if __name__ == '__main__':
     train_transform = transforms.Compose([
             #transforms.Resize((165, 75)),
             transforms.RandomGrayscale(0.3), 
-            transforms.ColorJitter(0.2, 0.2),
-            #transforms.RandomAffine((-2,2)), #,, (0.05, 0.05), (0.9, 1.) ),
+            transforms.ColorJitter(0.5, 0.5, 0.5),
+            transforms.RandomAffine((-2,2), (0.1, 0.1), (0.9, 1.) ),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225])
+                    std=[0.229, 0.224, 0.225])
     ])
 
     test_transform = transforms.Compose([
             #transforms.Resize((165, 75)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
-                             std=[0.229, 0.224, 0.225])
+                                     std=[0.229, 0.224, 0.225])
     ])
 
     train_dataset = CaptchaDataset(
@@ -110,7 +118,7 @@ if __name__ == '__main__':
             root_dir=os.path.join(args.data, 'test'), 
             transform=test_transform)
 
-    model = DeepCNN(
+    model = models.DeepCNN(
             length=train_dataset.label_length,
             n_classes = len(train_dataset.alphabet))
 
@@ -128,7 +136,7 @@ if __name__ == '__main__':
             batch_size=args.batch_size,
             shuffle=False)
 
-    optimizer = optim.Adadelta(model.parameters(), eps=1e-8)
+    optimizer = optim.Adadelta(model.parameters(), eps=args.eps)
 
     for epoch in range(args.epochs):
 

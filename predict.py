@@ -10,7 +10,12 @@ from torch.utils.data import DataLoader
 from torchvision import transforms
 
 from dataset import CaptchaDataset
-from models import SimpleCNN, DeepCNN
+import models
+
+from sklearn.metrics import confusion_matrix
+from utils import plot_confusion_matrix
+
+import matplotlib.pyplot as plt
 
 def predict(model, device, dataset):
     model.eval()
@@ -47,6 +52,8 @@ if __name__ == '__main__':
             help='data root directory')
     parser.add_argument('--batch-size', '-b', type=int, default=16,
                         help='input batch size')
+    parser.add_argument('--confusion-matrix', '-cf', action='store_true', 
+            default=False, help='disables CUDA training')
     parser.add_argument('--no-cuda', action='store_true', 
             default=False, help='disables CUDA training')
 
@@ -55,7 +62,6 @@ if __name__ == '__main__':
     device = torch.device("cpu" if args.no_cuda else "cuda")
 
     data_transform = transforms.Compose([
-            #transforms.Resize((165, 75)),
             transforms.ToTensor(),
             transforms.Normalize(mean=[0.485, 0.456, 0.406],
                              std=[0.229, 0.224, 0.225])
@@ -65,7 +71,7 @@ if __name__ == '__main__':
             root_dir=args.data,
             transform=data_transform)
 
-    model = DeepCNN(
+    model = models.DeepCNN(
             length=dataset.label_length,
             n_classes = len(dataset.alphabet))
 
@@ -77,6 +83,7 @@ if __name__ == '__main__':
             shuffle=False)
 
     result = []
+    total_pred, total_given = [], []
     for i, (images, labels) in enumerate(data_loader):
 
         t0 = time.time()
@@ -91,8 +98,25 @@ if __name__ == '__main__':
 
         pred_label  = "".join(dataset.decode_label(pred[0]))
 
+        total_pred.extend(pred[0].cpu().numpy())
+        total_given.extend(labels[0].cpu().numpy())
+
         result.append((loss.data.cpu(), dataset.image_names[i], pred_label))
 
-    for loss, label, name in sorted(result, key=lambda x: -x[0]):
-        print ("{}\t{}\t{:.8f}".format(name, label, loss))
-            
+    for loss, name, label in sorted(result, key=lambda x: -x[0]):
+        err = ' ' if label == name[:-4] else '*'
+        print ("{}\t{}\t{}\t{:.8f}".format(name, label, err, loss))
+
+    pr, gv = np.array(total_pred), np.array(total_given)
+    car = np.mean(pr == gv)
+    sar = np.mean(np.prod(pr.reshape(-1, 5), axis=1) == \
+            np.prod(gv.reshape(-1,5), axis=1))
+
+    print ("character accuracy rate:\t{:.4f}\n"
+            "sample accuracy rate:\t\t{:.4f}".format(car, sar))
+
+    if args.confusion_matrix:
+        cnf_matrix = confusion_matrix(total_given, total_pred)
+        plot_confusion_matrix(cnf_matrix, dataset.alphabet)
+        plt.show()
+

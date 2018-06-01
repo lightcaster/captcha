@@ -13,7 +13,7 @@ class CaptchaDataset(Dataset):
         self.root_dir = root_dir
         self.transform = transform
 
-        self.alphabet = list(string.digits + string.ascii_lowercase)
+        self.alphabet = list('0123456789abcdef')
         self.alphabet_dict = dict((c,i) for i, c in enumerate(self.alphabet))
 
         self.label_length = label_length
@@ -40,7 +40,7 @@ class CaptchaDataset(Dataset):
     def __getitem__(self, idx):
         img_name = os.path.join(self.root_dir,
                                 self.image_names[idx])
-        #image = io.imread(img_name)
+
         image = Image.open(img_name)
         label = self.labels[idx]
 
